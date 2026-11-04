@@ -377,6 +377,13 @@ img{-webkit-touch-callout:none}
 .k-debt .cut-burst{opacity:.25}
 .k-debt .cut-band::after{background:repeating-linear-gradient(90deg,#8a9cff55 0 2px,transparent 2px 9px),radial-gradient(circle at 70% 50%,transparent 30%,#0008 80%)}
 .k-payoff .cut-word{background:linear-gradient(180deg,#fff 0 36%,#fff3a0 37%,#ffb300);-webkit-background-clip:text;background-clip:text}
+.card.reveal{position:relative;animation:rvin .25s ease-out both,rvflip .6s cubic-bezier(.45,0,.3,1) var(--d,900ms) both}
+.card.reveal::after{content:"";position:absolute;inset:0;border-radius:inherit;border:2px solid #fff;
+  background:repeating-linear-gradient(45deg,#6b3fd6 0 5px,#5330b0 5px 10px);animation:rvback .6s linear var(--d,900ms) both}
+@keyframes rvin{from{opacity:0;transform:translateY(-14px)}}
+@keyframes rvflip{0%{transform:rotateY(0) scale(1)}50%{transform:rotateY(90deg) scale(1.12)}100%{transform:rotateY(0) scale(1)}}
+@keyframes rvback{0%,49%{opacity:1}50%,100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.card.reveal::after{display:none}}
 </style>
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 </head>
@@ -488,19 +495,21 @@ const SFX={
   cut(){noise(.4,.45,700);tone(180,.45,'sawtooth',.06,0,520);},
   allin(){noise(.5,.5,500);tone(130,.6,'sawtooth',.08,0,700);[392,523,659].forEach((f,i)=>tone(f,.35,'square',.05,.25+i*.06));},
   debt(){[392,330,262,196].forEach((f,i)=>tone(f,.32,'triangle',.13,i*.14));noise(.6,.25,300,.1);},
+  flipc(){noise(.09,.45,2400);tone(1500,.05,'triangle',.05);},
   win(){[523,659,784,1046].forEach((f,i)=>tone(f,.28,'triangle',.14,i*.09));},
   sd(){tone(330,.12,'square',.05);tone(495,.2,'square',.05,.1);},
 };
 const sfx=k=>{try{SFX[k]&&SFX[k]();}catch(e){}};
 
 /* ===== change detection → banners, stamps, deals, chip flights ===== */
+const REVEAL_WAIT=900,REVEAL_STEP=320;let REV=null;
 const EMPTYFX={pop:new Set(),boardNew:0,cardsNew:false,fly:null};
 let FX=EMPTYFX,PV={hand:-1,board:0,tags:{},turn:'',status:'',sd:false};
 function fx(){
   const f={pop:new Set(),boardNew:0,cardsNew:false,fly:null};
   if(!S||S.status==='lobby'||S.status==='over'||S.status==='closed'){PV.status=S?S.status:'';PV.hand=-1;FX=f;return;}
   if(S.handNo!==PV.hand){PV.hand=S.handNo;PV.board=0;PV.tags={};PV.sd=false;f.cardsNew=true;sfx('card');}
-  if(S.board.length>PV.board){f.boardNew=S.board.length-PV.board;PV.board=S.board.length;setTimeout(()=>sfx('card'),60);}
+  if(S.board.length>PV.board){f.boardNew=S.board.length-PV.board;REV={t:Date.now(),from:PV.board,hand:S.handNo};PV.board=S.board.length;sfx('card');for(let k=0;k<f.boardNew;k++)setTimeout(()=>sfx('flipc'),REVEAL_WAIT+k*REVEAL_STEP+250);}
   S.seats.forEach((p,i)=>{const k=(p.tag||'')+'|'+(p.bet||0);if(p.tag&&PV.tags[i]!==k&&S.status==='hand'){f.pop.add(i);
       sfx(p.tagc==='fold'?'fold':p.tagc==='check'?'check':'chip');}PV.tags[i]=k;});
   const mi=mySeat(),tk=S.status==='hand'&&mi>=0&&S.toAct===mi?S.handNo+':'+S.turnId:'';
@@ -605,7 +614,8 @@ function renderTable(){
   });
   const total=potTotal(),collected=total-S.seats.reduce((s,p)=>s+(p.bet||0),0);
   const board=[0,1,2,3,4].map(i=>{const c=S.board[i];const isNew=f.boardNew&&i>=S.board.length-f.boardNew;
-    return cardHTML(c,(isNew?'flip ':'')+hk(c),isNew?(i-(S.board.length-f.boardNew))*140:null);}).join('');
+    const rv=c&&REV&&REV.hand===S.handNo&&i>=REV.from?REVEAL_WAIT+(i-REV.from)*REVEAL_STEP-(Date.now()-REV.t):-9999;
+    return rv>-650?cardHTML(c,'reveal '+hk(c)).replace('class="card','style="--d:'+Math.round(rv)+'ms" class="card'):cardHTML(c,hk(c));}).join('');
   let result='';
   if(S.status==='result'&&S.result){
     const ws=S.result.winners.map(i=>`${esc(S.seats[i].name)} <span class="num">+${fmt(S.seats[i].won)}</span>`).join('<br>');
@@ -1022,6 +1032,7 @@ async function advance(){
     if(S.seats.filter(canAct).length<=1&&!S.showdown){reveal();await commit();await sleep(900);delay=1300;}
     S.street++;
     if(S.street===1)S.board.push(...H.deck.splice(0,3));else S.board.push(H.deck.pop());
+    delay=(S.street===1?2600:1800)+(delay>600?500:0);
     S.toAct=-1;S.nextTo=-1;S.deadline=0;await commit();await saveSecret();
     setTimeout(()=>hq(advance),delay);
     return;
