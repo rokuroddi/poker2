@@ -384,6 +384,56 @@ img{-webkit-touch-callout:none}
 @keyframes rvflip{0%{transform:rotateY(0) scale(1)}50%{transform:rotateY(90deg) scale(1.12)}100%{transform:rotateY(0) scale(1)}}
 @keyframes rvback{0%,49%{opacity:1}50%,100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.card.reveal::after{display:none}}
+.table .result{top:auto;transform:translateX(-50%);animation:rpop .35s ease-out both;z-index:7}
+@keyframes rpop{from{transform:translateX(-50%) scale(.5);opacity:0}}
+.mybet{left:50%;top:92%;z-index:3}
+.table .seat{z-index:4}
+.dtag{max-width:96px;overflow:hidden;text-overflow:ellipsis}
+.felt::after{top:84%}
+.table .seat{width:74px}
+.table .av{width:44px;height:44px}
+.table .nm{font-size:10px;max-width:72px}
+.table .ch{font-size:11px}
+.eqb{display:flex;align-items:baseline;gap:3px;margin-top:2px;padding:1px 7px;border-radius:6px;background:#000c;border:1.5px solid #7cc8ff;transform:skew(-8deg);white-space:nowrap;animation:eqin .3s ease-out}
+.eqb span{font-size:9px;font-weight:800;color:#bcd}
+.eqb b{font-family:var(--display);font-weight:400;font-size:15px;color:#fff}
+.eqb.lead{border-color:var(--gold);background:linear-gradient(90deg,#3a2600,#000c);box-shadow:0 0 12px #f0bf4c88}
+.eqb.lead b{color:var(--gold)}
+.eqb.dead{opacity:.55;border-color:#666}
+.hright .eqb b{font-size:20px}
+@keyframes eqin{from{transform:skew(-8deg) scale(1.4);opacity:0}}
+.stgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stb{height:48px;border-radius:12px;border:2px solid var(--sc);background:#120c1d;font-weight:800;font-size:15px;color:#fff;box-shadow:inset 0 0 18px color-mix(in srgb,var(--sc) 30%,transparent)}
+.stb:active{transform:scale(.96)}
+.bubble{position:fixed;z-index:58;display:flex;align-items:center;gap:6px;padding:5px 12px 5px 5px;border-radius:999px;background:#fff;color:#1a0a20;font-weight:800;font-size:15px;
+  border:3px solid var(--sc);box-shadow:0 4px 0 #0006,0 0 18px color-mix(in srgb,var(--sc) 60%,transparent);pointer-events:none;animation:bub .4s cubic-bezier(.2,1.6,.4,1) both;max-width:80vw}
+.bubble.out{opacity:0;transform:translateY(-10px);transition:all .3s}
+.bface{width:30px;height:30px;border-radius:50%;overflow:hidden;flex:none;background:var(--sc)}
+.bface img{width:100%;height:100%;object-fit:cover;display:block}
+.btxt{display:grid;line-height:1.15;white-space:nowrap}
+.btxt small{font-size:9.5px;color:#8a6a9a}
+@keyframes bub{from{transform:scale(.3);opacity:0}}
+.sheet.ranks{max-width:440px}
+.rlist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.rlist li{display:grid;grid-template-columns:1fr auto;grid-template-areas:"h c" "d c";gap:2px 8px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)}
+.rlist li:first-child{border-color:var(--gold);box-shadow:0 0 14px #f0bf4c44}
+.rhead{grid-area:h;display:flex;gap:8px;align-items:center;font-size:14px}
+.rno{font-family:var(--display);color:var(--gold);font-size:13px;width:18px}
+.rdesc{grid-area:d;font-size:11px;color:var(--mute)}
+.rcards{grid-area:c;display:flex;gap:2px}
+.rcards .card.sm{width:22px;height:31px;padding:1px 2px}
+.rcards .card.sm b{font-size:10px}.rcards .card.sm i{font-size:11px}
+@media (max-width:370px){.rlist li{grid-template-columns:1fr;grid-template-areas:"h" "c" "d"}}
+.k-hand .cut-word{font-size:clamp(44px,13.5vw,82px);background:linear-gradient(180deg,#fff 0 36%,#fff07a 37%,#ff8a00);-webkit-background-clip:text;background-clip:text}
+.k-hand.longword .cut-word{font-size:clamp(32px,9.4vw,58px)}
+.k-hand.xlong .cut-word{font-size:clamp(26px,7.4vw,46px);left:2%}
+.k-hand.cat7 .cut-word,.k-hand.cat8 .cut-word{background:linear-gradient(180deg,#fff 0 36%,#ffb0f0 37%,#c23bff);-webkit-background-clip:text;background-clip:text}
+.k-hand .cut-burst{opacity:.75;animation-duration:2s}
+.cut.royal .cut-band{background:linear-gradient(100deg,#ff3d6a,#ffb21e,#3be08a,#2f8cff,#a14cff);background-size:300% 100%;animation:band .32s cubic-bezier(.2,.9,.3,1.2) both,rainbow 1.2s linear infinite}
+.cut.royal .cut-word{background:linear-gradient(90deg,#ff5a8a,#ffe14a,#5cffb0,#6ab8ff,#e08aff,#ff5a8a);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;animation:slam .45s .18s cubic-bezier(.2,.9,.3,1.35) both,rainbow 1.5s linear infinite}
+.cut.royal .cut-burst{background:repeating-conic-gradient(from 0deg,#ffe14a 0 3deg,transparent 3deg 8deg);opacity:.9}
+@keyframes rainbow{to{background-position:300% 0}}
+.k-suckout .cut-word{background:linear-gradient(180deg,#fff 0 36%,#9fe6ff 37%,#2f6bff);-webkit-background-clip:text;background-clip:text}
 </style>
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 </head>
@@ -495,6 +545,8 @@ const SFX={
   cut(){noise(.4,.45,700);tone(180,.45,'sawtooth',.06,0,520);},
   allin(){noise(.5,.5,500);tone(130,.6,'sawtooth',.08,0,700);[392,523,659].forEach((f,i)=>tone(f,.35,'square',.05,.25+i*.06));},
   debt(){[392,330,262,196].forEach((f,i)=>tone(f,.32,'triangle',.13,i*.14));noise(.6,.25,300,.1);},
+  big(){noise(.5,.5,600);[523,659,784,1046,1318].forEach((f,i)=>tone(f,.35,'square',.07,.15+i*.08));[1046,1318,1568].forEach((f,i)=>tone(f,.6,'triangle',.1,.6+i*.05));},
+  pop(){tone(880,.07,'sine',.12,0,300);tone(1320,.08,'sine',.08,.06);},
   flipc(){noise(.09,.45,2400);tone(1500,.05,'triangle',.05);},
   win(){[523,659,784,1046].forEach((f,i)=>tone(f,.28,'triangle',.14,i*.09));},
   sd(){tone(330,.12,'square',.05);tone(495,.2,'square',.05,.1);},
@@ -507,6 +559,7 @@ const EMPTYFX={pop:new Set(),boardNew:0,cardsNew:false,fly:null};
 let FX=EMPTYFX,PV={hand:-1,board:0,tags:{},turn:'',status:'',sd:false};
 function fx(){
   const f={pop:new Set(),boardNew:0,cardsNew:false,fly:null};
+  if(S&&S.stamp&&S.stamp.id!==PV.stamp){const first=PV.stamp===undefined;PV.stamp=S.stamp.id;if(!first&&S.status!=='lobby')setTimeout(()=>showStamp(S.stamp),40);}else if(S&&!S.stamp&&PV.stamp===undefined)PV.stamp=null;
   if(!S||S.status==='lobby'||S.status==='over'||S.status==='closed'){PV.status=S?S.status:'';PV.hand=-1;FX=f;return;}
   if(S.handNo!==PV.hand){PV.hand=S.handNo;PV.board=0;PV.tags={};PV.sd=false;f.cardsNew=true;sfx('card');}
   if(S.board.length>PV.board){f.boardNew=S.board.length-PV.board;REV={t:Date.now(),from:PV.board,hand:S.handNo};PV.board=S.board.length;sfx('card');for(let k=0;k<f.boardNew;k++)setTimeout(()=>sfx('flipc'),REVEAL_WAIT+k*REVEAL_STEP+250);}
@@ -520,8 +573,49 @@ function fx(){
   if(S.status==='result'&&PV.status!=='result'&&S.result){f.fly=S.result.winners.slice();setTimeout(()=>sfx('win'),350);}
   PV.status=S.status;FX=f;
 }
+function eqView(){
+  if(!S.eq||S.status!=='hand')return null;
+  const busy=REV&&REV.hand===S.handNo&&Date.now()-REV.t<REVEAL_WAIT+(S.board.length-REV.from-1)*REVEAL_STEP+350;
+  const v=busy?S.eqPrev||S.eq:S.eq;if(busy&&S.eqPrev){clearTimeout(eqView.t);eqView.t=setTimeout(()=>{if(!typing())render();},REVEAL_WAIT+(S.board.length-REV.from-1)*REVEAL_STEP+400-(Date.now()-REV.t));}
+  return v;
+}
+function eqHTML(v,i){if(!v||v[i]==null)return '';const top=Math.max(...Object.values(v));
+  return `<div class="eqb ${v[i]===top&&v[i]>0?'lead':''} ${v[i]===0?'dead':''}"><span>勝率</span><b class="num">${v[i]%1?v[i].toFixed(1):v[i]}%</b></div>`;}
+const STAMPS=[['ナイス！','#2fd47a'],['うそでしょ…','#7c8cff'],['降りろ〜','#ff8a2b'],['強すぎ','#ff3d9a'],['ブラフでしょ？','#c58bff'],['ありがと！','#ffcc33'],['やばい','#e0304a'],['GG','#3ee0ff']];
+let stampCool=0;
+function openStamps(){
+  if(mySeat()<0)return;
+  const ov=document.createElement('div');ov.className='ov';
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-label="スタンプ"><h3>スタンプ</h3><div class="stgrid">${STAMPS.map(([t,c],k)=>`<button class="stb" data-k="${k}" style="--sc:${c}">${t}</button>`).join('')}</div>
+    <button class="sbtn ghost" id="stclose">閉じる</button></div>`;
+  document.body.appendChild(ov);
+  ov.querySelectorAll('.stb').forEach(b=>b.onclick=()=>{ov.remove();if(Date.now()<stampCool)return;stampCool=Date.now()+1500;sendStamp(+b.dataset.k);});
+  ov.querySelector('#stclose').onclick=()=>ov.remove();ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+}
+function showStamp(st){
+  const k=st.k|0,[txt,col]=STAMPS[k]||STAMPS[0],p=S.seats[st.seat];if(!p)return;
+  const mi=mySeat(),target=st.seat===mi?document.querySelector('.hport'):document.querySelector(`[data-seat="${st.seat}"] .av`);
+  const el=document.createElement('div');el.className='bubble';el.style.setProperty('--sc',col);
+  el.innerHTML=`<div class="bface">${portrait(p)}</div><div class="btxt"><small>${esc(p.name)}</small>${txt}</div>`;
+  document.body.appendChild(el);
+  const r=target?target.getBoundingClientRect():{left:innerWidth/2-20,top:innerHeight/2,width:40,height:40};
+  const bw=el.offsetWidth,bh=el.offsetHeight;
+  let x=r.left+r.width/2-bw/2,y=r.top-bh-6;if(y<8)y=r.top+r.height+6;x=Math.max(8,Math.min(innerWidth-bw-8,x));
+  el.style.left=x+'px';el.style.top=y+'px';sfx('pop');
+  setTimeout(()=>el.classList.add('out'),2000);setTimeout(()=>el.remove(),2300);
+}
 function debtTitle(p){const n=p.loans|0;return n>=3?'借金王':n===2?'多重債務者':'借金中';}
 function debtHTML(p){return p.debt>0?`<div class="dtag">${debtTitle(p)} <span class="num">-${fmt(p.debt)}</span></div>`:(p.paid?'<div class="dtag paid">完済済</div>':'');}
+function layoutTable(){
+  const t=document.querySelector('.table'),c=t&&t.querySelector('.center');if(!c)return;
+  const tr=t.getBoundingClientRect(),cr=c.getBoundingClientRect(),half=cr.height/2;
+  let low=0;t.querySelectorAll('.seat,.betchip:not(.mybet)').forEach(s=>{const r=s.getBoundingClientRect();if(r.right>cr.left+2&&r.left<cr.right-2)low=Math.max(low,r.bottom-tr.top);});
+  let top=Math.max(low+12+half,tr.height*.5);top=Math.min(top,tr.height-half-4);
+  c.style.top=top+'px';
+  const mb=t.querySelector('.mybet');if(mb)mb.style.top=Math.min(tr.height-12,top+half+20)+'px';
+  const res=t.querySelector('.result');if(res){const rh=res.getBoundingClientRect().height;res.style.top=Math.max(4,Math.min(top+half+8,tr.height+30-rh))+'px';}
+}
+window.addEventListener('resize',()=>{try{layoutTable();}catch(e){}});
 function myStamp(p){
   const tc=p.tagc;if(!tc||p.tag==='SB'||p.tag==='BB')return;
   const label={fold:'フォールド',check:'チェック',call:'コール',raise:(p.tag||'').startsWith('ベット')?'ベット!!':'レイズ!!',allin:'オールイン!!'}[tc];if(!label)return;
@@ -553,20 +647,21 @@ async function runCuts(){cutBusy=true;while(cutQ.length){const ev=cutQ.shift();i
 function cutin(ev){
   return new Promise(res=>{
     const g=GIRLS[(ev.g|0)%GIRLS.length],kind=ev.kind;
-    const lines=g[kind]||g.allin,line=lines[(ev.l||0)%lines.length];
-    const word={win:'WIN!!',raise:'レイズ!',allin:'オールイン!!',debt:'借金!!',payoff:'完済!!'}[kind]||'オールイン!!';
-    const sub=kind==='win'?'+'+fmt(ev.amt):kind==='raise'?fmt(ev.amt)+' に上げた':kind==='debt'?'借金 合計 '+fmt(ev.amt):kind==='payoff'?fmt(ev.amt)+' を返済':'合計 '+fmt(ev.amt);
+    const lines=g[kind]||((kind==='hand'||kind==='suckout')?g.win:g.allin),line=lines[(ev.l||0)%lines.length];
+    const word=kind==='hand'?ev.hn+(ev.royal?'!!!':'!!'):({win:'WIN!!',raise:'レイズ!',allin:'オールイン!!',debt:'借金!!',payoff:'完済!!',suckout:'大逆転!!'}[kind]||'オールイン!!');
+    const sub=kind==='hand'?'+'+fmt(ev.amt):kind==='suckout'?'勝率 '+ev.pct+'% から +'+fmt(ev.amt):kind==='win'?'+'+fmt(ev.amt):kind==='raise'?fmt(ev.amt)+' に上げた':kind==='debt'?'借金 合計 '+fmt(ev.amt):kind==='payoff'?fmt(ev.amt)+' を返済':'合計 '+fmt(ev.amt);
     const el=document.createElement('div');el.className='cut k-'+kind;el.setAttribute('role','dialog');el.setAttribute('aria-label',word);
-    const gold=kind==='win'||kind==='payoff';el.style.setProperty('--cc',gold?'#ffcc33':kind==='debt'?'#4a4f78':g.cc);el.style.setProperty('--cc2',gold?'#a35a00':kind==='debt'?'#0b0c18':g.cc2);
+    const gold=kind==='win'||kind==='payoff'||kind==='hand'||kind==='suckout';el.style.setProperty('--cc',gold?'#ffcc33':kind==='debt'?'#4a4f78':g.cc);el.style.setProperty('--cc2',gold?'#a35a00':kind==='debt'?'#0b0c18':g.cc2);
     el.innerHTML=`<div class="cut-dim"></div><div class="cut-burst"></div><div class="cut-band"></div>
       <div class="cut-girl">${girlImg((ev.g|0)%6)}</div>
       <div class="cut-head"><div class="cut-who">${esc(ev.name)}</div><div class="cut-amt num">${sub}</div></div>
       <div class="cut-word">${word}</div>
       <div class="cut-line">「${esc(line)}」<small>${g.name}</small></div>
       <div class="cut-skip">タップでスキップ</div><div class="cut-flash"></div>`;
-    document.body.appendChild(el);sfx(kind==='raise'?'cut':kind==='debt'?'debt':(kind==='win'||kind==='payoff')?'win':'allin');
+    document.body.appendChild(el);sfx(kind==='raise'?'cut':kind==='debt'?'debt':kind==='hand'?'big':(kind==='win'||kind==='payoff'||kind==='suckout')?'win':'allin');
     let done=false;const close=()=>{if(done)return;done=true;el.classList.add('out');setTimeout(()=>{el.remove();res();},180);};
-    el.onclick=close;setTimeout(close,kind==='raise'?1350:kind==='win'?2300:2100);
+    if(kind==='hand'){el.classList.add('cat'+ev.cat);if(ev.royal)el.classList.add('royal');const L=(ev.hn||'').length;if(L>=8)el.classList.add('xlong');else if(L>=6)el.classList.add('longword');}
+    el.onclick=close;setTimeout(close,kind==='raise'?1350:ev.royal?3600:kind==='hand'?2800:kind==='suckout'?2600:kind==='win'?2300:2100);
   });
 }
 
@@ -587,6 +682,7 @@ function cardHTML(c,cls='',delay){if(!c)return `<div class="card slot ${cls}"></
 const backHTML=(cls,delay)=>`<div class="card back ${cls||''}"${delay!=null?` style="animation-delay:${delay}ms"`:''}></div>`;
 function renderTable(){
   const f=FX;FX=EMPTYFX;
+  const EQ=eqView();
   const n=S.seats.length,mi=mySeat(),base=mi>=0?mi:0;
   const stName=['プリフロップ','フロップ','ターン','リバー'][S.street]||'';
   const winSet=new Set(S.result?S.result.winners:[]);
@@ -595,11 +691,12 @@ function renderTable(){
   const hk=c=>c&&hiKeys.has(c.r+c.s)?'hi':'';
   let seats='';
   S.seats.forEach((p,i)=>{
-    const rel=(i-base+n)%n,ang=(90+rel*360/n)*Math.PI/180;
-    const bx=50+25*Math.cos(ang),by=50+27*Math.sin(ang);
+    const rel=(i-base+n)%n;
+    if(i===mi){if(p.bet>0)seats+=`<div class="betchip mybet num">${fmt(p.bet)}</div>`;return;}
+    const k=mi>=0?rel:rel+1,m=mi>=0?n-1:n,span=m<=2?150:m<=4?200:240,ang=(270-span/2+k*span/(m+1))*Math.PI/180;
+    const x=50+41*Math.cos(ang),y=47+39*Math.sin(ang);
+    const bx=x+(50-x)*.42,by=y+(47-y)*.55+4;
     if(p.bet>0)seats+=`<div class="betchip num" style="left:${bx}%;top:${by}%">${fmt(p.bet)}</div>`;
-    if(i===mi)return;
-    const x=50+40*Math.cos(ang),y=53+40*Math.sin(ang);
     const face=p.cards&&p.cards.length?p.cards:null;
     const minis=p.out||p.folded||!p.dealt?'':`<div class="minis">${face?face.map(c=>cardHTML(c,'sm '+hk(c))).join(''):backHTML('sm'+(f.cardsNew?' deal':''),f.cardsNew?i*60:null)+backHTML('sm'+(f.cardsNew?' deal':''),f.cardsNew?i*60+n*60:null)}</div>`;
     let tag='';
@@ -610,7 +707,7 @@ function renderTable(){
     const turn=S.status==='hand'&&i===S.toAct;
     seats+=`<div class="seat ${turn?'turn':''} ${p.folded?'folded':''} ${p.out?'out':''} ${winSet.has(i)?'win':''} ${p.debt>0?'indebt':''}" data-seat="${i}" style="left:${x}%;top:${y}%">
       <div class="av" style="--c:${chOf(p).cc}">${portrait(p)}${i===S.dealer?'<span class="dbtn">D</span>':''}${p.cpu?'<span class="cpu-badge">CPU</span>':''}${minis}</div>
-      <div class="nm">${esc(p.name)}</div><div class="ch num">${fmt(p.chips)}</div>${debtHTML(p)}${tag}${S.status==='hand'?stampHTML(p,f.pop.has(i)):''}</div>`;
+      <div class="nm">${esc(p.name)}</div><div class="ch num">${fmt(p.chips)}</div>${debtHTML(p)}${tag}${eqHTML(EQ,i)}${S.status==='hand'?stampHTML(p,f.pop.has(i)):''}</div>`;
   });
   const total=potTotal(),collected=total-S.seats.reduce((s,p)=>s+(p.bet||0),0);
   const board=[0,1,2,3,4].map(i=>{const c=S.board[i];const isNew=f.boardNew&&i>=S.board.length-f.boardNew;
@@ -635,7 +732,7 @@ function renderTable(){
     panel+=`<div class="hero ${me.folded?'folded':''} ${f.pop.has(mi)&&me.tag!=='SB'&&me.tag!=='BB'?'acted':''}">
       <div class="hport ${myTurn?'turn':''} ${winSet.has(mi)?'win':''} ${me.debt>0?'indebt':''}" style="--c:${chOf(me).cc}">${portrait(me)}<div class="ring" id="ring"></div>${mi===S.dealer?'<span class="dbtn">D</span>':''}</div>
       <div class="hmid"><div class="hcards">${cards}</div><div class="hhand">${me.dealt?(myCards?hand:'カードを受け取り中…'):(me.waiting?'次のハンドから参加します':(me.out?'チップがなくなりました':''))}</div></div>
-      <div class="hright"><div class="hname">${esc(me.name)}</div><div class="hchips num">${fmt(me.chips)}</div>${debtHTML(me)}${S.status==='hand'?stampHTML(me,f.pop.has(mi)):''}</div></div>`;
+      <div class="hright"><div class="hname">${esc(me.name)}</div><div class="hchips num">${fmt(me.chips)}</div>${debtHTML(me)}${eqHTML(EQ,mi)}${S.status==='hand'?stampHTML(me,f.pop.has(mi)):''}</div></div>`;
     const broke=!me.cpu&&me.chips+(me.pending||0)<=0,canRepay=me.debt>0&&S.status==='result'&&me.chips-S.BB>0;
     if(broke)panel+=`<button class="debt-btn" id="borrow">借金して復活する<small class="num">+${fmt(S.start)}（借金 ${(me.loans|0)+1}回目）</small></button>`;
     else if(me.pending>0&&me.debt>0&&S.status==='hand')panel+=`<div class="wait">借金した ${fmt(me.pending)} は次のハンドから使えます</div>`;
@@ -659,7 +756,7 @@ function renderTable(){
     panel+=`<div class="wait">${myTurn?'送信しました…':(cur?`<b>${esc(cur.name)}</b> が考え中… <span id="timer"></span>`:'…')}</div>`;
   }
   $('#root').innerHTML=`<div class="top"><div class="blinds num"><span class="code">${esc(S.code)}</span> SB/BB ${fmt(S.SB)}/${fmt(S.BB)} <small>#${S.handNo}</small></div>
-      <button class="menu-btn snd" id="snd" aria-label="効果音" aria-pressed="${soundOn}">${soundOn?'音ON':'音OFF'}</button><button class="menu-btn" id="menu" aria-label="メニュー">≡</button></div>
+      ${mi>=0?'<button class="menu-btn snd" id="stampb" aria-label="スタンプ">スタンプ</button>':''}<button class="menu-btn snd" id="snd" aria-label="効果音" aria-pressed="${soundOn}">${soundOn?'音ON':'音OFF'}</button><button class="menu-btn" id="menu" aria-label="メニュー">≡</button></div>
     <div class="table"><div class="felt"></div>
       <div class="center"><div class="pot num"><span class="plabel">ポット</span>${fmt(collected)}${total!==collected?`<small>（合計 ${fmt(total)}）</small>`:''}</div>
       <div class="board">${board}</div><div class="street">${S.status==='result'?'SHOWDOWN':stName}</div></div>
@@ -667,8 +764,10 @@ function renderTable(){
     <div class="panel">${panel}<div class="err" id="errline">${esc(lastErr)}</div></div>`;
   $('#menu').onclick=openMenu;
   {const b=$('#borrow');if(b)b.onclick=()=>{b.disabled=true;sendBorrow();};const r=$('#repay');if(r)r.onclick=()=>{r.disabled=true;sendRepay();};}
+  {const sb=$('#stampb');if(sb)sb.onclick=openStamps;}
   $('#snd').onclick=()=>{soundOn=!soundOn;ls.set('aih_snd',soundOn?'1':'0');if(soundOn){ac();sfx('chip');}render();};
   const nh=$('#nexth');if(nh)nh.onclick=()=>hq(hostNext);
+  layoutTable();
   if(f.fly)setTimeout(()=>flyChips(f.fly),250);
   tickTimer();
   if(!myTurn||sentTurn===S.turnId)return;
@@ -700,6 +799,10 @@ const BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mq
 const TOPIC='allinholdem/v2/';
 const ME={uid:null,name:'',keys:null,ch:0};
 let S=null,code=null,isHost=false,H=null;
+let seenEv=new Set();
+function evsOf(){return S.evs&&S.evs.length?S.evs:(S.ev?[S.ev]:[]);}
+function markEvs(){evsOf().forEach(e=>seenEv.add(e.id));}
+function playEvs(){evsOf().forEach(e=>{if(!seenEv.has(e.id)){seenEv.add(e.id);queueCut(e);}});}
 let myCards=null,myCardsIv='',sentTurn=-1,raiseTo=0,lastEv=undefined,cutQ=[],cutBusy=false,pendingRender=false,pubChecked=false;
 let hostQ=Promise.resolve(),turnTimer=null,nextTimer=null,speed=900,lastErr='';
 let client=null,session=0,wakeLock=null;
@@ -736,7 +839,7 @@ function route(){
 function cleanup(){
   session++;clearTimeout(turnTimer);clearTimeout(nextTimer);
   if(client){try{client.end(true);}catch(e){}}client=null;
-  S=null;H=null;code=null;isHost=false;myCards=null;myCardsIv='';lastEv=undefined;sentTurn=-1;lastErr='';pubChecked=false;
+  S=null;H=null;code=null;isHost=false;myCards=null;myCardsIv='';lastEv=undefined;seenEv=new Set();sentTurn=-1;lastErr='';pubChecked=false;
   if(wakeLock){try{wakeLock.release();}catch(e){}wakeLock=null;}
 }
 async function requestWake(){try{if('wakeLock' in navigator&&!wakeLock){wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null;});}}catch(e){}}
@@ -777,6 +880,7 @@ function showHome(prefill){
     <div class="box"><h2>テーブルを作る（ホスト）</h2>
       <span class="hint">ホストのスマホがゲームを進めます。ゲーム中はこのページを開いたままにしてください。</span>
       <button class="big-btn" id="create" ${prefill?'style="background:var(--panel2);box-shadow:none;border:1px solid var(--line)"':''}>テーブルを作る</button></div>
+    <button class="mid-btn" id="hranks" style="background:var(--panel2);color:var(--fg);border:1px solid var(--line);margin-bottom:12px;width:100%">役の一覧を見る</button>
     <div class="box"><h2>コードで参加</h2>
       <div class="join-row"><input id="cd" class="code-in" maxlength="4" placeholder="ABCD" autocomplete="off" aria-label="テーブルコード"><button class="mid-btn" id="go">参加</button></div>
       <div id="cderr" class="err"></div></div>
@@ -787,6 +891,7 @@ function showHome(prefill){
   $('#create').onclick=()=>{if(needName())createTable();};
   const go=c=>{if(!needName())return;startGuest(c);};
   const cdgo=()=>{const c=$('#cd').value.trim().toUpperCase();if(!/^[A-Z]{4}$/.test(c)){$('#cderr').textContent='アルファベット4文字のコードを入れてください。';return;}go(c);};
+  $('#hranks').onclick=openRanks;
   $('#go').onclick=cdgo;$('#cd').onkeydown=e=>{if(e.key==='Enter')cdgo();};
   const jp=$('#joinPre');if(jp)jp.onclick=()=>go(prefill);
   const rs=$('#resume');if(rs)rs.onclick=()=>startHost(saved.S,saved.H);
@@ -803,7 +908,7 @@ function createTable(){
 
 /* ===== host ===== */
 async function startHost(s,h){
-  cleanup();const my=session;isHost=true;S=s;H=h||{hole:{}};code=S.code;setHash(code);lastEv=S.ev?S.ev.id:null;
+  cleanup();const my=session;isHost=true;S=s;H=h||{hole:{}};code=S.code;setHash(code);markEvs();
   if(!samePub(S.hostPub,ME.keys.pub)){S.hostPub=ME.keys.pub;const mi=mySeat();if(mi>=0)S.seats[mi].pub=ME.keys.pub;
     if(S.status!=='lobby'&&H.handNo===S.handNo)for(let k=0;k<S.seats.length;k++)await sealSeat(k);}
   lastErr='通信サーバーに接続しています…';render();requestWake();
@@ -824,6 +929,7 @@ function onHostData(d){
   const cid=String(d.cid||'').slice(0,40);if(!cid||cid===ME.uid)return;
   if(d.t==='join')hq(()=>handleJoin(cid,{name:d.name,pub:d.pub,ch:d.ch}));
   else if(d.t==='leave')hq(()=>handleJoin(cid,{name:d.name,leave:true}));
+  else if(d.t==='stamp'){const i=S.seats.findIndex(s=>s.uid===cid);if(i>=0)hq(()=>hostStamp(i,d.k));}
   else if(d.t==='borrow'){const i=S.seats.findIndex(s=>s.uid===cid);if(i>=0)hq(()=>hostBorrow(i));}
   else if(d.t==='repay'){const i=S.seats.findIndex(s=>s.uid===cid);if(i>=0)hq(()=>hostRepay(i));}
   else if(d.t==='act'){const i=S.seats.findIndex(s=>s.uid===cid);if(i>=0)hq(()=>hostApply(i,{type:d.type,to:d.to},d.turnId));}
@@ -838,7 +944,7 @@ async function sealSeat(i){const s=S.seats[i];const c=H.hole&&H.hole[i];
   const e=await seal(s.pub,{h:S.handNo,c});e.h=S.handNo;s.enc=e;}
 function onLocal(){
   fx();
-  if(S.ev&&S.ev.id!==lastEv){lastEv=S.ev.id;queueCut(S.ev);}
+  playEvs();
   const mi=mySeat();myCards=mi>=0&&H&&H.hole&&H.handNo===S.handNo&&S.status!=='lobby'?(H.hole[mi]||null):null;
   render();
 }
@@ -873,7 +979,7 @@ async function startGuest(c){
       const t=setTimeout(()=>res(false),4500);
       cl.on('message',(topic,buf)=>{if(topic!==tState(c))return;let d;try{d=JSON.parse(buf.toString());}catch(e){return;}
         if(my!==session)return;clearTimeout(t);
-        const first=!S;S=d;if(first){lastEv=S.ev?S.ev.id:null;res(true);}else onState();});
+        const first=!S;S=d;if(first){markEvs();res(true);}else onState();});
       cl.subscribe(tState(c),{qos:1});
     });
     if(my!==session){cl.end(true);return;}
@@ -887,7 +993,7 @@ async function startGuest(c){
 function send(obj){if(client){try{client.publish(tIn(code),JSON.stringify(obj),{qos:1});}catch(e){}}}
 function onState(){
   fx();
-  if(S.ev&&S.ev.id!==lastEv){const first=lastEv===undefined;lastEv=S.ev.id;if(!first)queueCut(S.ev);}
+  playEvs();
   const i=mySeat();
   if(i>=0&&!samePub(S.seats[i].pub,ME.keys.pub)&&!S.seats[i].left&&!pubChecked){pubChecked=true;send({t:'join',cid:ME.uid,name:myName(),pub:ME.keys.pub,ch:ME.ch});}
   decryptMine().then(render);
@@ -899,6 +1005,11 @@ async function decryptMine(){
   if(myCardsIv===s.enc.iv&&myCards)return;
   try{const o=await unseal(S.hostPub,s.enc);if(o.h===S.handNo){myCards=o.c;myCardsIv=s.enc.iv;}}catch(e){myCards=null;}
 }
+function sendStamp(k){const i=mySeat();if(i<0)return;if(isHost){hq(()=>hostStamp(i,k));return;}send({t:'stamp',cid:ME.uid,k});}
+const stampAt={};
+async function hostStamp(i,k){if(!S||!S.seats[i]||S.status==='lobby')return;k=Math.max(0,Math.min(STAMPS.length-1,k|0));
+  const now=Date.now();if(stampAt[i]&&now-stampAt[i]<1200)return;stampAt[i]=now;
+  S.stampN=(S.stampN||0)+1;S.stamp={id:S.stampN+'-'+now,seat:i,k};await commit();}
 function sendBorrow(){const i=mySeat();if(i<0)return;if(isHost){hq(()=>hostBorrow(i));return;}send({t:'borrow',cid:ME.uid});}
 function sendRepay(){const i=mySeat();if(i<0)return;if(isHost){hq(()=>hostRepay(i));return;}send({t:'repay',cid:ME.uid});}
 async function hostBorrow(i){
@@ -994,12 +1105,12 @@ const needs=q=>canAct(q)&&(!q.acted||q.bet<S.currentBet);
 function nextIdx(i,pred){const n=S.seats.length;for(let k=1;k<=n;k++){const j=((i+k)%n+n)%n;if(pred(S.seats[j]))return j;}return -1;}
 const potTotal=()=>S.seats.reduce((s,p)=>s+(p.total||0),0);
 function pay(p,a){a=Math.max(0,Math.min(a,p.chips));p.chips-=a;p.bet+=a;p.total+=a;if(p.chips===0)p.allIn=true;return a;}
-function newEv(kind,seat,amt){S.evN=(S.evN||0)+1;S.ev={id:S.handNo+'-'+S.evN,kind,seat,amt,name:S.seats[seat].name,g:(S.seats[seat].ch|0)%GIRLS.length,l:Math.random()*3|0};}
+function newEv(kind,seat,amt,extra){S.evN=(S.evN||0)+1;S.ev=Object.assign({id:S.handNo+'-'+S.evN,kind,seat,amt,name:S.seats[seat].name,g:(S.seats[seat].ch|0)%GIRLS.length,l:Math.random()*3|0},extra||{});S.evs=(S.evs||[]).concat(S.ev).slice(-4);}
 async function startHand(){
   clearTimeout(nextTimer);
   S.seats.forEach(p=>{p.chips+=p.pending||0;p.pending=0;});
   if(S.seats.filter(p=>p.chips>0).length<2){S.status='over';const w=S.seats.slice().sort((a,b)=>b.chips-a.chips)[0];newEv('win',S.seats.indexOf(w),w.chips);await commit();return;}
-  S.handNo++;S.board=[];S.street=0;S.showdown=false;S.result=null;S.hadAllIn=false;S.status='hand';
+  S.handNo++;S.board=[];S.street=0;S.showdown=false;S.result=null;S.hadAllIn=false;S.status='hand';S.eq=null;S.eqPrev=null;S.runout=false;S.stamp=S.stamp||null;
   S.seats.forEach(p=>Object.assign(p,{waiting:false,out:p.chips<=0,bet:0,total:0,folded:false,allIn:false,acted:false,tag:'',tagc:'',handName:'',won:0,dealt:false,cards:[],enc:null}));
   const n=S.seats.length,alive=S.seats.filter(p=>!p.out);
   S.dealer=nextIdx(S.dealer,p=>!p.out);
@@ -1020,6 +1131,19 @@ function roundDone(){
   if(a.length===1&&a[0].bet>=S.currentBet)return true;
   return a.every(p=>p.acted&&p.bet===S.currentBet);
 }
+function eqCalc(){
+  const live=S.seats.map((p,i)=>inHand(p)&&H.hole[i]?i:-1).filter(i=>i>=0);
+  if(live.length<2){return null;}
+  const key=c=>c.r+c.s,used=new Set(S.board.map(key));live.forEach(i=>H.hole[i].forEach(c=>used.add(key(c))));
+  const rest=FULL.filter(c=>!used.has(key(c))),need=5-S.board.length,win={};live.forEach(i=>win[i]=0);
+  let n=0;
+  const score=b=>{const sc=live.map(i=>best(H.hole[i].concat(b))),top=Math.max(...sc),ws=live.filter((i,k)=>sc[k]===top);ws.forEach(i=>win[i]+=1/ws.length);n++;};
+  if(need===0)score(S.board);
+  else if(need===1){for(const c of rest)score(S.board.concat([c]));}
+  else if(need===2){for(let a=0;a<rest.length;a++)for(let b=a+1;b<rest.length;b++)score(S.board.concat([rest[a],rest[b]]));}
+  else{for(let it=0;it<1800;it++){const d=rest.slice();for(let k=0;k<need;k++){const j=k+(Math.random()*(d.length-k)|0);[d[k],d[j]]=[d[j],d[k]];}score(S.board.concat(d.slice(0,need)));}}
+  const out={};live.forEach(i=>out[i]=Math.round(win[i]/n*1000)/10);return out;
+}
 function reveal(){S.showdown=true;S.seats.forEach((p,i)=>{if(inHand(p)&&H.hole[i])p.cards=H.hole[i];});}
 async function advance(){
   if(!S||S.status!=='hand')return;
@@ -1029,9 +1153,10 @@ async function advance(){
     S.seats.forEach(p=>{p.bet=0;p.acted=false;if(canAct(p))p.tag='';});S.currentBet=0;S.minRaise=S.BB;
     if(S.street===3){showdown();await commit();scheduleNext();return;}
     let delay=600;
-    if(S.seats.filter(canAct).length<=1&&!S.showdown){reveal();await commit();await sleep(900);delay=1300;}
+    if(S.seats.filter(canAct).length<=1&&!S.showdown){reveal();S.eq=eqCalc();S.eqPrev=null;S.runout=true;await commit();await sleep(1400);delay=1300;}
     S.street++;
     if(S.street===1)S.board.push(...H.deck.splice(0,3));else S.board.push(H.deck.pop());
+    if(S.runout){S.eqPrev=S.eq;S.eq=eqCalc();}
     delay=(S.street===1?2600:1800)+(delay>600?500:0);
     S.toAct=-1;S.nextTo=-1;S.deadline=0;await commit();await saveSecret();
     setTimeout(()=>hq(advance),delay);
@@ -1083,11 +1208,18 @@ function showdown(){
     const top=Math.max(...el.map(p=>p.score)),ws=order.filter(p=>el.includes(p)&&p.score===top);
     const sh=Math.floor(amt/ws.length);ws.forEach(p=>p.won+=sh);ws[0].won+=amt-sh*ws.length;pots++;last=ws;}
   if(carry&&last)last[0].won+=carry;
+  const topScore=live.length?Math.max(...live.map(p=>p.score)):0;
   S.seats.forEach(p=>{p.chips+=p.won;p.bet=0;delete p.score;});
   const winners=S.seats.map((p,i)=>p.won>0?i:-1).filter(i=>i>=0);
   S.result={type:'show',winners,pot:potTotal(),pots};S.status='result';S.toAct=-1;S.nextAt=Date.now()+bustDelay();
   const top=winners.slice().sort((a,b)=>S.seats[b].won-S.seats[a].won)[0];
-  if(top!=null&&(S.hadAllIn||S.result.pot>=S.BB*30))newEv('win',top,S.seats[top].won);
+  if(top!=null){
+    const cat=catOf(topScore),royal=cat===8&&Math.floor(topScore/15**4)%15===14;
+    const pe=S.eqPrev&&S.eqPrev[top],loserHi=S.eqPrev?Math.max(0,...Object.entries(S.eqPrev).filter(([k])=>!winners.includes(+k)).map(([,v])=>v)):0;
+    if(cat>=6)newEv('hand',top,S.seats[top].won,{hn:royal?'ロイヤルフラッシュ':HN[cat],royal,cat});
+    else if(S.eqPrev&&pe!=null&&pe<=30&&loserHi>=70)newEv('suckout',top,S.seats[top].won,{pct:pe});
+    else if(S.hadAllIn||S.result.pot>=S.BB*30)newEv('win',top,S.seats[top].won);
+  }
   winners.forEach(autoPay);
 }
 function scheduleNext(){clearTimeout(nextTimer);nextTimer=setTimeout(()=>hq(hostNext),Math.max(1500,(S.nextAt||0)-Date.now()));}
@@ -1133,6 +1265,26 @@ function hostToLobby(){hq(async()=>{clearTimeout(turnTimer);clearTimeout(nextTim
   S.seats=S.seats.filter(s=>!s.left);S.seats.forEach(s=>Object.assign(s,{chips:S.start,debt:0,loans:0,paid:false,pending:0,bet:0,total:0,folded:false,allIn:false,out:false,waiting:false,tag:'',won:0,dealt:false,cards:[],enc:null}));await commit();});}
 
 /* ===== menu ===== */
+const RANKS=[
+ ['ロイヤルフラッシュ','同じマークの 10・J・Q・K・A',[[10,'s'],[11,'s'],[12,'s'],[13,'s'],[14,'s']]],
+ ['ストレートフラッシュ','同じマークで数字が5つ連続',[[5,'h'],[6,'h'],[7,'h'],[8,'h'],[9,'h']]],
+ ['フォーカード','同じ数字が4枚',[[9,'s'],[9,'h'],[9,'d'],[9,'c'],[3,'s']]],
+ ['フルハウス','スリーカード＋ワンペア',[[12,'s'],[12,'h'],[12,'d'],[4,'c'],[4,'s']]],
+ ['フラッシュ','同じマークが5枚',[[2,'d'],[6,'d'],[9,'d'],[11,'d'],[13,'d']]],
+ ['ストレート','数字が5つ連続（マークは自由）',[[4,'c'],[5,'d'],[6,'h'],[7,'s'],[8,'c']]],
+ ['スリーカード','同じ数字が3枚',[[7,'s'],[7,'h'],[7,'d'],[13,'c'],[2,'s']]],
+ ['ツーペア','ペアが2組',[[11,'s'],[11,'h'],[5,'d'],[5,'c'],[14,'s']]],
+ ['ワンペア','同じ数字が2枚',[[10,'h'],[10,'c'],[4,'s'],[8,'d'],[13,'h']]],
+ ['ハイカード','役なし。いちばん高いカードで勝負',[[14,'d'],[11,'c'],[8,'s'],[6,'h'],[3,'c']]],
+];
+function openRanks(){
+  const ov=document.createElement('div');ov.className='ov';
+  ov.innerHTML=`<div class="sheet ranks" role="dialog" aria-label="役の一覧"><h3>役の一覧</h3><p class="hint" style="margin:0">上ほど強い役です。手札2枚と場の5枚から、いちばん強い5枚の組み合わせで勝負します。</p>
+    <ol class="rlist">${RANKS.map(([n,d,cs],k)=>`<li><div class="rhead"><span class="rno num">${k+1}</span><b>${n}</b></div><div class="rcards">${cs.map(([r,s])=>cardHTML({r,s},'sm')).join('')}</div><div class="rdesc">${d}</div></li>`).join('')}</ol>
+    <p class="hint" style="margin:0">同じ役どうしは数字が大きい方の勝ち。A は最強ですが、A-2-3-4-5 のストレートでは 1 として使えます。マークに強さの差はありません。</p>
+    <button class="sbtn ghost" id="rclose">閉じる</button></div>`;
+  document.body.appendChild(ov);ov.querySelector('#rclose').onclick=()=>ov.remove();ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+}
 function openMenu(){
   const ov=document.createElement('div');ov.className='ov';
   const opts=S.seats.map((p,i)=>`<option value="${i}">${esc(p.name)}（${fmt(p.chips)}）</option>`).join('');
@@ -1148,7 +1300,7 @@ function openMenu(){
     <div class="grp" style="grid-template-columns:1fr 1fr">
       ${isHost?'<button class="sbtn danger" id="mlobby">ゲームを終えてロビーへ</button><button class="sbtn danger" id="mclosetbl">テーブルを閉じる</button>'
         :(mi>=0?'<button class="sbtn danger" id="mleave">席を立つ（CPUが代打ち）</button>':'')}
-      <button class="sbtn ghost" id="mhome">トップに戻る</button><button class="sbtn ghost" id="mclose">閉じる</button></div>
+      <button class="sbtn ghost" id="mranks">役の一覧</button><button class="sbtn ghost" id="mhome">トップに戻る</button><button class="sbtn ghost" id="mclose">閉じる</button></div>
     ${isHost?'<p class="hint" style="margin:0">ホストがこのページを閉じるとゲームが止まります。開き直すと続きから再開します。</p>':''}</div>`;
   document.body.appendChild(ov);
   const note=t=>{ov.querySelector('#mnote').textContent=t;};
@@ -1161,6 +1313,7 @@ function openMenu(){
   arm('#mlobby',hostToLobby);
   arm('#mclosetbl',()=>hq(async()=>{S.status='closed';await commit();await sleep(800);ls.set('aih_host','');setHash('');showHome('');}));
   arm('#mleave',()=>{sendJoin(true);});
+  on('#mranks',()=>{ov.remove();openRanks();});
   on('#mhome',()=>{ov.remove();setHash('');showHome('');});
   on('#mclose',()=>ov.remove());
   ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
