@@ -342,6 +342,23 @@ body{background:
 .k-win .cut-girl{animation:girlw .55s .05s cubic-bezier(.15,.9,.25,1.2) both}
 @keyframes girlw{from{transform:translateY(60%) scale(.8);opacity:0}}
 img{-webkit-touch-callout:none}
+.mystamp{position:fixed;left:50%;top:55%;z-index:45;pointer-events:none;display:grid;justify-items:center;padding:14px 34px 18px;
+  font-family:var(--display);color:#2a1400;background:var(--sb);white-space:nowrap;
+  clip-path:polygon(0 14%,9% 0,28% 9%,50% 0,72% 9%,100% 0,93% 50%,100% 100%,72% 91%,50% 100%,28% 91%,0 100%,7% 50%);
+  animation:mys 1.6s cubic-bezier(.2,1.6,.4,1) both}
+.mystamp.s-fold{color:#f2eef8}.mystamp.s-allin{color:#fff}
+.mystamp small{font-family:var(--body);font-weight:800;font-size:12px;letter-spacing:.1em;opacity:.85}
+.mystamp span{font-size:42px;line-height:1.05}
+.mystamp b{font-size:28px;font-weight:400;line-height:1}
+@keyframes mys{0%{transform:translate(-50%,-50%) rotate(-22deg) skew(-8deg) scale(3);opacity:0}
+  16%,78%{transform:translate(-50%,-50%) rotate(-8deg) skew(-8deg) scale(1);opacity:1}
+  100%{transform:translate(-50%,-70%) rotate(-8deg) skew(-8deg) scale(.9);opacity:0}}
+.hero{border-radius:12px}
+.hero.acted{animation:heroflash .8s ease-out}
+@keyframes heroflash{0%{box-shadow:inset 0 0 0 3px #fff,0 0 34px #ffffff99;background:#ffffff1a}100%{box-shadow:none;background:transparent}}
+.hright .stamp{font-size:14px;padding:8px 14px 10px}
+.hright .stamp b{font-size:20px}
+@media (prefers-reduced-motion:reduce){.mystamp{animation:none;transform:translate(-50%,-50%) rotate(-8deg)}}
 </style>
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 </head>
@@ -468,11 +485,21 @@ function fx(){
   S.seats.forEach((p,i)=>{const k=(p.tag||'')+'|'+(p.bet||0);if(p.tag&&PV.tags[i]!==k&&S.status==='hand'){f.pop.add(i);
       sfx(p.tagc==='fold'?'fold':p.tagc==='check'?'check':'chip');}PV.tags[i]=k;});
   const mi=mySeat(),tk=S.status==='hand'&&mi>=0&&S.toAct===mi?S.handNo+':'+S.turnId:'';
+  if(mi>=0&&f.pop.has(mi))myStamp(S.seats[mi]);
   if(tk&&tk!==PV.turn){banner('YOUR TURN','turn');sfx('turn');}
   if(tk)PV.turn=tk;
   if(S.showdown&&!PV.sd){PV.sd=true;banner('SHOW DOWN','sd');sfx('sd');}
   if(S.status==='result'&&PV.status!=='result'&&S.result){f.fly=S.result.winners.slice();setTimeout(()=>sfx('win'),350);}
   PV.status=S.status;FX=f;
+}
+function myStamp(p){
+  const tc=p.tagc;if(!tc||p.tag==='SB'||p.tag==='BB')return;
+  const label={fold:'フォールド',check:'チェック',call:'コール',raise:(p.tag||'').startsWith('ベット')?'ベット!!':'レイズ!!',allin:'オールイン!!'}[tc];if(!label)return;
+  const amt=tc==='call'||tc==='raise'?p.bet:tc==='allin'?p.total:0;
+  document.querySelectorAll('.mystamp').forEach(x=>x.remove());
+  const el=document.createElement('div');el.className='mystamp s-'+tc;el.setAttribute('role','status');
+  el.innerHTML=`<small>あなた</small><span>${label}</span>${amt?`<b class="num">${fmt(amt)}</b>`:''}`;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),1600);
 }
 function banner(text,kind){
   const el=document.createElement('div');el.className='banner '+kind;el.setAttribute('aria-hidden','true');
@@ -574,7 +601,7 @@ function renderTable(){
     let hand='';if(myCards&&S.board.length>=3&&!me.folded)hand=HN[catOf(best(myCards.concat(S.board)))];
     if(S.result&&me.won)hand=(me.handName||hand)+` <span class="num">+${fmt(me.won)}</span>`;
     const cards=me.dealt?(myCards?myCards.map((c,k)=>cardHTML(c,'lg '+hk(c)+(f.cardsNew?' flip':''),f.cardsNew?300+k*160:null)).join(''):backHTML('lg')+backHTML('lg')):'';
-    panel+=`<div class="hero ${me.folded?'folded':''}">
+    panel+=`<div class="hero ${me.folded?'folded':''} ${f.pop.has(mi)&&me.tag!=='SB'&&me.tag!=='BB'?'acted':''}">
       <div class="hport ${myTurn?'turn':''} ${winSet.has(mi)?'win':''}" style="--c:${chOf(me).cc}">${portrait(me)}<div class="ring" id="ring"></div>${mi===S.dealer?'<span class="dbtn">D</span>':''}</div>
       <div class="hmid"><div class="hcards">${cards}</div><div class="hhand">${me.dealt?(myCards?hand:'カードを受け取り中…'):(me.waiting?'次のハンドから参加します':(me.out?'チップがありません':''))}</div></div>
       <div class="hright"><div class="hname">${esc(me.name)}</div><div class="hchips num">${fmt(me.chips)}</div>${S.status==='hand'?stampHTML(me,f.pop.has(mi)):''}</div></div>`;
