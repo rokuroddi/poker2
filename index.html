@@ -219,7 +219,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .top .code{font-family:var(--display);color:var(--gold);font-size:13px;letter-spacing:.08em}
 .you{font-size:9px;font-weight:800;color:#022;background:var(--cyan);padding:0 5px;border-radius:4px;margin-left:3px}
 </style>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 </head>
 <body>
 <div id="root" class="app"></div>
@@ -313,15 +313,37 @@ function girlSVG(g){
   </svg>`;
 }
 
-/* ===== globals (web version: phones connect directly through PeerJS) ===== */
+/* ===== crypto: each phone gets its own key; the host seals each player's hole cards for that player only ===== */
+const b64=buf=>{const a=new Uint8Array(buf);let s='';for(const x of a)s+=String.fromCharCode(x);return btoa(s);};
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const EC={name:'ECDH',namedCurve:'P-256'};
+async function loadKeys(){
+  let st=null;try{st=JSON.parse(ls.get('aih_keys')||'null');}catch(e){}
+  if(!st){const kp=await crypto.subtle.generateKey(EC,true,['deriveKey']);
+    st={priv:await crypto.subtle.exportKey('jwk',kp.privateKey),pub:await crypto.subtle.exportKey('jwk',kp.publicKey)};ls.set('aih_keys',JSON.stringify(st));}
+  const priv=await crypto.subtle.importKey('jwk',st.priv,EC,false,['deriveKey']);
+  return{priv,pub:{kty:'EC',crv:'P-256',x:st.pub.x,y:st.pub.y}};
+}
+const kcache=new Map();
+async function aesWith(pub){const k=pub.x+pub.y;if(kcache.has(k))return kcache.get(k);
+  const pk=await crypto.subtle.importKey('jwk',{kty:'EC',crv:'P-256',x:pub.x,y:pub.y},EC,false,[]);
+  const key=await crypto.subtle.deriveKey({name:'ECDH',public:pk},ME.keys.priv,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);kcache.set(k,key);return key;}
+async function seal(pub,obj){const key=await aesWith(pub),iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(obj)));return{iv:b64(iv),ct:b64(ct)};}
+async function unseal(pub,enc){const key=await aesWith(pub);
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(enc.iv)},key,unb64(enc.ct));return JSON.parse(new TextDecoder().decode(pt));}
+const samePub=(a,b)=>!!a&&!!b&&a.x===b.x&&a.y===b.y;
+
+/* ===== globals (web version: messages relayed through a public MQTT broker; hole cards sealed per player) ===== */
 const COLORS=['#ff4f9a','#2f8cff','#ff8a1f','#20b87a','#a14cff','#e0304a','#16b3c8','#c7a321','#ff6fd8'];
 const CPU_NAMES=['みお','ハル','つむぎ','レン','ソラ','ユズ','カイ','ナギ','ミク'];
-const PREFIX='allin-holdem-v1-';
-const ME={uid:null,name:''};
+const BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'];
+const TOPIC='allinholdem/v2/';
+const ME={uid:null,name:'',keys:null};
 let S=null,code=null,isHost=false,H=null;
-let myCards=null,sentTurn=-1,raiseTo=0,lastEv=undefined,cutQ=[],cutBusy=false,pendingRender=false;
+let myCards=null,myCardsIv='',sentTurn=-1,raiseTo=0,lastEv=undefined,cutQ=[],cutBusy=false,pendingRender=false,pubChecked=false;
 let hostQ=Promise.resolve(),turnTimer=null,nextTimer=null,speed=900,lastErr='';
-let peer=null,conns=new Map(),hostConn=null,retryT=null,connectT=null,wakeLock=null,leaving=false,freshCreate=false;
+let client=null,session=0,wakeLock=null;
 const readonly=()=>false;
 ME.uid=ls.get('aih_cid')||(()=>{const v='c'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);ls.set('aih_cid',v);return v;})();
 const typing=()=>{const a=document.activeElement;return a&&a.tagName==='INPUT'&&a.type!=='range'&&a.closest('#root');};
@@ -334,15 +356,14 @@ function renderMsg(title,body,btn){
   $('#root').innerHTML=`<div class="msg"><div><h1 class="logo">ALL IN<br><span>HOLD'EM</span></h1><p><b style="color:var(--fg)">${esc(title)}</b>${body?'<br>'+body:''}</p>${btn?`<button class="mid-btn" id="mbtn">${esc(btn)}</button>`:''}</div></div>`;
   const b=$('#mbtn');if(b)b.onclick=()=>{setHash('');showHome('');};
 }
-function boot(){
+async function boot(){
   ME.name=ls.get('aih_name')||'';
   window.addEventListener('hashchange',route);
   document.addEventListener('focusout',()=>setTimeout(()=>{if(pendingRender&&!typing()){pendingRender=false;render();}},50));
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;
-    if(isHost)requestWake();
-    else if(code&&peer&&(!hostConn||!hostConn.open)){if(peer.disconnected){try{peer.reconnect();}catch(e){}}else connectHost();}});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isHost)requestWake();});
   setInterval(tickTimer,1000);
-  if(typeof Peer==='undefined'){renderMsg('通信の準備ができませんでした','インターネット接続を確認して、ページを開き直してください。');return;}
+  if(typeof mqtt==='undefined'){renderMsg('通信の準備ができませんでした','インターネット接続を確認して、ページを開き直してください。');return;}
+  try{ME.keys=await loadKeys();}catch(e){renderMsg('このブラウザでは遊べません','手札を隠すための機能が使えませんでした。Safari か Chrome の最新版で開いてください。');return;}
   route();
 }
 function loadHost(c){try{const o=JSON.parse(ls.get('aih_host')||'null');
@@ -353,13 +374,30 @@ function route(){
   else showHome('');
 }
 function cleanup(){
-  leaving=true;clearTimeout(turnTimer);clearTimeout(nextTimer);clearTimeout(retryT);clearTimeout(connectT);
-  try{if(peer)peer.destroy();}catch(e){}peer=null;conns=new Map();hostConn=null;
-  S=null;H=null;code=null;isHost=false;myCards=null;lastEv=undefined;sentTurn=-1;lastErr='';
+  session++;clearTimeout(turnTimer);clearTimeout(nextTimer);
+  if(client){try{client.end(true);}catch(e){}}client=null;
+  S=null;H=null;code=null;isHost=false;myCards=null;myCardsIv='';lastEv=undefined;sentTurn=-1;lastErr='';pubChecked=false;
   if(wakeLock){try{wakeLock.release();}catch(e){}wakeLock=null;}
-  setTimeout(()=>{leaving=false;},0);
 }
 async function requestWake(){try{if('wakeLock' in navigator&&!wakeLock){wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null;});}}catch(e){}}
+
+/* ===== broker connection ===== */
+function connectBroker(url,ms){
+  return new Promise(res=>{
+    let done=false;
+    const c=mqtt.connect(url,{clientId:'aih_'+Math.random().toString(36).slice(2,12),clean:true,reconnectPeriod:3000,connectTimeout:ms,keepalive:30});
+    const fail=()=>{if(done)return;done=true;try{c.end(true);}catch(e){}res(null);};
+    const t=setTimeout(fail,ms+500);
+    c.once('connect',()=>{if(done)return;done=true;clearTimeout(t);res(c);});
+    c.on('error',()=>{});
+  });
+}
+function watch(c,my){
+  c.on('offline',()=>{if(my!==session)return;lastErr='通信が切れました。つなぎ直しています…';render();});
+  c.on('reconnect',()=>{if(my!==session)return;lastErr='つなぎ直しています…';render();});
+  c.on('connect',()=>{if(my!==session)return;if(lastErr.includes('つなぎ直'))lastErr='';render();if(isHost)publishState();});
+}
+const tState=c=>TOPIC+c+'/state',tIn=c=>TOPIC+c+'/in';
 
 /* ===== home ===== */
 function showHome(prefill){
@@ -390,73 +428,49 @@ function showHome(prefill){
   const jp=$('#joinPre');if(jp)jp.onclick=()=>go(prefill);
   const rs=$('#resume');if(rs)rs.onclick=()=>startHost(saved.S,saved.H);
 }
-function mkSeat(o,i){return Object.assign({uid:null,name:'?',cpu:false,left:false,away:false,color:COLORS[i%9],chips:0,pending:0,bet:0,total:0,folded:false,allIn:false,acted:false,out:false,waiting:false,tag:'',tagc:'',won:0,handName:'',dealt:false,cards:[]},o);}
+function mkSeat(o,i){return Object.assign({uid:null,name:'?',cpu:false,left:false,away:false,color:COLORS[i%9],pub:null,chips:0,pending:0,bet:0,total:0,folded:false,allIn:false,acted:false,out:false,waiting:false,tag:'',tagc:'',won:0,handName:'',dealt:false,cards:[],enc:null},o);}
 function freeColor(){const used=new Set(S.seats.map(s=>s.color));return COLORS.find(c=>!used.has(c))||COLORS[S.seats.length%9];}
 function randCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ';let c='';for(let i=0;i<4;i++)c+=A[Math.random()*A.length|0];return c;}
 function createTable(){
   const c=randCode();
-  const t={code:c,created:Date.now(),hostUid:ME.uid,hostName:myName(),status:'lobby',SB:100,BB:200,start:20000,turnSec:60,
-    seats:[mkSeat({uid:ME.uid,name:myName(),chips:20000},0)],v:1,handNo:0,dealer:-1,turnId:0,toAct:-1,nextTo:-1,board:[],street:0,ev:null,evN:0};
-  freshCreate=true;startHost(t,{hole:{}});
+  const t={code:c,created:Date.now(),hostUid:ME.uid,hostName:myName(),hostPub:ME.keys.pub,status:'lobby',SB:100,BB:200,start:20000,turnSec:60,
+    seats:[mkSeat({uid:ME.uid,name:myName(),pub:ME.keys.pub,chips:20000},0)],v:1,handNo:0,dealer:-1,turnId:0,toAct:-1,nextTo:-1,board:[],street:0,ev:null,evN:0};
+  startHost(t,{hole:{}});
 }
 
-/* ===== host networking ===== */
-function startHost(s,h){
-  cleanup();isHost=true;S=s;H=h||{hole:{}};code=S.code;setHash(code);lastEv=S.ev?S.ev.id:null;
-  S.seats.forEach(x=>{if(!x.cpu&&x.uid!==ME.uid)x.away=true;});
-  lastErr='接続の準備中…';render();openHostPeer();
+/* ===== host ===== */
+async function startHost(s,h){
+  cleanup();const my=session;isHost=true;S=s;H=h||{hole:{}};code=S.code;setHash(code);lastEv=S.ev?S.ev.id:null;
+  if(!samePub(S.hostPub,ME.keys.pub)){S.hostPub=ME.keys.pub;const mi=mySeat();if(mi>=0)S.seats[mi].pub=ME.keys.pub;
+    if(S.status!=='lobby'&&H.handNo===S.handNo)for(let k=0;k<S.seats.length;k++)await sealSeat(k);}
+  lastErr='通信サーバーに接続しています…';render();requestWake();
+  let c=null;
+  for(const url of BROKERS){c=await connectBroker(url,7000);if(my!==session){if(c)c.end(true);return;}if(c)break;}
+  if(!c){lastErr='通信サーバーにつながりませんでした。電波の良い場所で、ページを開き直してください。';render();
+    setTimeout(()=>{if(my===session)startHost(S,H);},8000);return;}
+  client=c;watch(c,my);lastErr='';
+  c.subscribe(tIn(code),{qos:1});
+  c.on('message',(topic,buf)=>{if(my!==session||topic!==tIn(code))return;let d;try{d=JSON.parse(buf.toString());}catch(e){return;}onHostData(d);});
+  publishState();render();
   if(S.status==='hand'){if(H.handNo!==S.handNo)hq(refundHand);else hq(advance);}
   else if(S.status==='result')scheduleNext();
   else persist();
-  requestWake();
 }
-function openHostPeer(){
-  if(!isHost)return;
-  const p=new Peer(PREFIX+code);peer=p;
-  p.on('open',()=>{if(peer!==p)return;freshCreate=false;lastErr='';render();});
-  p.on('connection',conn=>{
-    conn.on('data',raw=>{let d=raw;if(typeof raw==='string'){try{d=JSON.parse(raw);}catch(e){return;}}onHostData(conn,d);});
-    conn.on('close',()=>onHostClose(conn));conn.on('error',()=>onHostClose(conn));
-  });
-  p.on('disconnected',()=>{if(peer!==p)return;setTimeout(()=>{try{if(peer===p&&p.disconnected&&!p.destroyed)p.reconnect();}catch(e){}},2000);});
-  p.on('error',e=>{
-    if(peer!==p)return;
-    if(e.type==='unavailable-id'){
-      try{p.destroy();}catch(x){}
-      if(freshCreate&&S.status==='lobby'&&S.seats.length===1){code=randCode();S.code=code;setHash(code);persist();openHostPeer();render();return;}
-      lastErr='前の接続が残っています。数秒後につなぎ直します…';render();retryT=setTimeout(openHostPeer,5000);
-    }else if(['network','server-error','socket-error','socket-closed'].includes(e.type)){
-      lastErr='通信サーバーにつながりません。つなぎ直しています…';render();
-      try{p.destroy();}catch(x){}retryT=setTimeout(openHostPeer,5000);
-    }
-  });
-}
-function onHostData(conn,d){
+function onHostData(d){
   if(!d||typeof d!=='object'||!S)return;
   const cid=String(d.cid||'').slice(0,40);if(!cid||cid===ME.uid)return;
-  const prev=conns.get(cid);if(prev&&prev!==conn){try{prev.close();}catch(e){}}
-  conn._cid=cid;conns.set(cid,conn);
-  if(d.t==='join')hq(()=>handleJoin(cid,{name:d.name}));
+  if(d.t==='join')hq(()=>handleJoin(cid,{name:d.name,pub:d.pub}));
   else if(d.t==='leave')hq(()=>handleJoin(cid,{name:d.name,leave:true}));
   else if(d.t==='act'){const i=S.seats.findIndex(s=>s.uid===cid);if(i>=0)hq(()=>hostApply(i,{type:d.type,to:d.to},d.turnId));}
 }
-function onHostClose(conn){
-  const cid=conn._cid;if(!cid||conns.get(cid)!==conn)return;conns.delete(cid);
-  hq(async()=>{if(!S)return;const i=S.seats.findIndex(s=>s.uid===cid);if(i<0||S.seats[i].cpu)return;S.seats[i].away=true;await commit();});
-}
-function sendTo(cid,obj){const c=conns.get(cid);if(c&&c.open){try{c.send(JSON.stringify(obj));}catch(e){}}}
 function persist(){if(S)ls.set('aih_host',JSON.stringify({S,H,at:Date.now()}));}
-function broadcast(){
-  for(const [cid] of conns){
-    const i=S.seats.findIndex(s=>s.uid===cid);
-    const cards=i>=0&&H&&H.hole&&H.handNo===S.handNo&&S.status!=='lobby'?(H.hole[i]||null):null;
-    sendTo(cid,{t:'state',S,cards});
-  }
-}
+function publishState(){if(client&&S){try{client.publish(tState(code),JSON.stringify(S),{qos:1,retain:true});}catch(e){}}}
 const hq=fn=>{hostQ=hostQ.then(fn).catch(e=>{console.error(e);});return hostQ;};
-async function commit(){S.v=(S.v||0)+1;persist();broadcast();onLocal();}
+async function commit(){S.v=(S.v||0)+1;persist();publishState();onLocal();}
 async function saveSecret(){persist();}
-async function sealSeat(){}
+async function sealSeat(i){const s=S.seats[i];const c=H.hole&&H.hole[i];
+  if(!s||s.cpu||!s.pub||!c||H.handNo!==S.handNo){if(s)s.enc=null;return;}
+  const e=await seal(s.pub,{h:S.handNo,c});e.h=S.handNo;s.enc=e;}
 function onLocal(){
   if(S.ev&&S.ev.id!==lastEv){lastEv=S.ev.id;queueCut(S.ev);}
   const mi=mySeat();myCards=mi>=0&&H&&H.hole&&H.handNo===S.handNo&&S.status!=='lobby'?(H.hole[mi]||null):null;
@@ -468,75 +482,80 @@ async function handleJoin(cid,d){
   if(d.leave){
     if(i<0||cid===S.hostUid)return;
     if(S.status==='lobby')S.seats.splice(i,1);
-    else{const s=S.seats[i];s.cpu=true;s.left=true;s.away=false;s.name=name+'(CPU)';}
+    else{const s=S.seats[i];s.cpu=true;s.left=true;s.enc=null;s.name=name+'(CPU)';}
     await commit();if(S.status==='hand'&&S.toAct===i)scheduleCpu(i,S.turnId);return;
   }
-  if(i>=0){const s=S.seats[i];s.away=false;if(s.left){s.cpu=false;s.left=false;}s.name=name;await commit();return;}
-  if(S.seats.length>=9){sendTo(cid,{t:'full'});return;}
-  const s=mkSeat({uid:cid,name,chips:S.start,color:freeColor()},0);
+  const pub=d.pub&&typeof d.pub.x==='string'&&typeof d.pub.y==='string'?{kty:'EC',crv:'P-256',x:d.pub.x,y:d.pub.y}:null;
+  if(i>=0){const s=S.seats[i];s.name=name;if(s.left){s.cpu=false;s.left=false;}
+    if(pub&&!samePub(s.pub,pub)){s.pub=pub;await sealSeat(i);}
+    await commit();return;}
+  if(S.seats.length>=9)return;
+  const s=mkSeat({uid:cid,name,pub,chips:S.start,color:freeColor()},0);
   if(S.status!=='lobby'){s.waiting=true;s.out=true;}
   S.seats.push(s);await commit();
 }
 
-/* ===== guest networking ===== */
-function startGuest(c){
-  cleanup();code=c;isHost=false;setHash(c);
-  renderMsg(`テーブル ${c} に接続しています…`,'少し時間がかかることがあります。');
-  const p=new Peer();peer=p;
-  p.on('open',()=>{if(peer===p)connectHost();});
-  p.on('disconnected',()=>{if(peer!==p)return;setTimeout(()=>{try{if(peer===p&&p.disconnected&&!p.destroyed)p.reconnect();}catch(e){}},2000);});
-  p.on('error',e=>{
-    if(peer!==p)return;
-    if(e.type==='peer-unavailable'){
-      if(!S){clearTimeout(connectT);renderMsg(`テーブル ${c} が見つかりません`,'コードが合っているか、ホストがページを開いたままか確かめてください。','トップに戻る');}
-      else{lastErr='ホストと通信できません。つなぎ直しています…';render();clearTimeout(retryT);retryT=setTimeout(connectHost,4000);}
-    }else if(['network','server-error','socket-error','socket-closed'].includes(e.type)){
-      lastErr='通信サーバーにつながりません。つなぎ直しています…';if(S)render();
-    }
-  });
-  connectT=setTimeout(()=>{if(!S&&code===c)renderMsg('つながりませんでした','ホストのスマホでページが開いているか確かめて、もう一度試してください。通信環境によってはつながらないことがあります。','トップに戻る');},20000);
+/* ===== guest ===== */
+async function startGuest(c){
+  cleanup();const my=session;code=c;isHost=false;setHash(c);
+  renderMsg(`テーブル ${c} を探しています…`,'少し時間がかかることがあります。');
+  for(const url of BROKERS){
+    const cl=await connectBroker(url,7000);if(my!==session){if(cl)cl.end(true);return;}
+    if(!cl)continue;
+    const found=await new Promise(res=>{
+      const t=setTimeout(()=>res(false),4500);
+      cl.on('message',(topic,buf)=>{if(topic!==tState(c))return;let d;try{d=JSON.parse(buf.toString());}catch(e){return;}
+        if(my!==session)return;clearTimeout(t);
+        const first=!S;S=d;if(first){lastEv=S.ev?S.ev.id:null;res(true);}else onState();});
+      cl.subscribe(tState(c),{qos:1});
+    });
+    if(my!==session){cl.end(true);return;}
+    if(found){client=cl;watch(cl,my);
+      if(S.status==='closed'){render();return;}
+      pubChecked=true;send({t:'join',cid:ME.uid,name:myName(),pub:ME.keys.pub});onState();return;}
+    cl.end(true);
+  }
+  if(my===session)renderMsg(`テーブル ${c} が見つかりません`,'コードが合っているか、ホストがページを開いたままか確かめてください。','トップに戻る');
 }
-function connectHost(){
-  clearTimeout(retryT);if(!peer||peer.destroyed||!peer.open)return;
-  const conn=peer.connect(PREFIX+code,{reliable:true});hostConn=conn;
-  conn.on('open',()=>{if(hostConn!==conn)return;lastErr='';conn.send(JSON.stringify({t:'join',cid:ME.uid,name:myName()}));});
-  conn.on('data',raw=>{if(hostConn!==conn)return;let d=raw;if(typeof raw==='string'){try{d=JSON.parse(raw);}catch(e){return;}}
-    if(d.t==='state'){clearTimeout(connectT);S=d.S;myCards=d.cards||null;onState();}
-    else if(d.t==='full'){clearTimeout(connectT);renderMsg('満席です','このテーブルは9人そろっています。','トップに戻る');}});
-  conn.on('close',()=>{if(hostConn!==conn||leaving||!code)return;lastErr='ホストとの接続が切れました。つなぎ直しています…';if(S)render();retryT=setTimeout(connectHost,3000);});
-  conn.on('error',()=>{});
-}
+function send(obj){if(client){try{client.publish(tIn(code),JSON.stringify(obj),{qos:1});}catch(e){}}}
 function onState(){
   if(S.ev&&S.ev.id!==lastEv){const first=lastEv===undefined;lastEv=S.ev.id;if(!first)queueCut(S.ev);}
-  if(mySeat()<0&&S.status!=='closed'){/* removed by host */}
-  render();
+  const i=mySeat();
+  if(i>=0&&!samePub(S.seats[i].pub,ME.keys.pub)&&!S.seats[i].left&&!pubChecked){pubChecked=true;send({t:'join',cid:ME.uid,name:myName(),pub:ME.keys.pub});}
+  decryptMine().then(render);
+}
+async function decryptMine(){
+  const i=mySeat();if(i<0){myCards=null;return;}
+  const s=S.seats[i];
+  if(!s.enc||s.enc.h!==S.handNo){myCards=null;myCardsIv='';return;}
+  if(myCardsIv===s.enc.iv&&myCards)return;
+  try{const o=await unseal(S.hostPub,s.enc);if(o.h===S.handNo){myCards=o.c;myCardsIv=s.enc.iv;}}catch(e){myCards=null;}
 }
 function sendJoin(leave){
-  if(isHost){hq(()=>handleJoin(ME.uid,{name:myName(),leave}));return;}
-  if(hostConn&&hostConn.open){try{hostConn.send(JSON.stringify({t:leave?'leave':'join',cid:ME.uid,name:myName()}));}catch(e){}}
-  if(leave)setTimeout(()=>{setHash('');showHome('');},300);
+  if(isHost){hq(()=>handleJoin(ME.uid,{name:myName(),pub:ME.keys.pub,leave}));return;}
+  send({t:leave?'leave':'join',cid:ME.uid,name:myName(),pub:ME.keys.pub});
+  if(leave)setTimeout(()=>{setHash('');showHome('');},400);
 }
 function sendAct(a){
   const i=mySeat();if(i<0)return;
-  if(isHost){sentTurn=S.turnId;render();const tid=S.turnId;hq(()=>hostApply(i,a,tid));return;}
-  if(!hostConn||!hostConn.open){lastErr='ホストとつながっていません。つながるまで待ってください。';render();return;}
   sentTurn=S.turnId;render();
-  try{hostConn.send(JSON.stringify({t:'act',cid:ME.uid,turnId:S.turnId,type:a.type,to:a.to||0}));}catch(e){sentTurn=-1;render();}
+  if(isHost){const tid=S.turnId;hq(()=>hostApply(i,a,tid));return;}
+  if(!client||!client.connected){lastErr='通信が切れています。つながるまで待ってください。';sentTurn=-1;render();return;}
+  send({t:'act',cid:ME.uid,turnId:S.turnId,type:a.type,to:a.to||0});
 }
 
 /* host lobby ops */
 function hostAddCpu(){hq(async()=>{if(S.seats.length>=9)return;const used=new Set(S.seats.map(s=>s.name));
   const nm=CPU_NAMES.find(n=>!used.has(n))||'CPU';const s=mkSeat({name:nm,cpu:true,chips:S.start,color:freeColor()},0);
   if(S.status!=='lobby'){s.waiting=true;s.out=true;}S.seats.push(s);await commit();});}
-function hostRemove(i){hq(async()=>{if(S.status!=='lobby'||S.seats[i].uid===S.hostUid)return;const s=S.seats.splice(i,1)[0];await commit();
-  if(s.uid){sendTo(s.uid,{t:'full'});}});}
+function hostRemove(i){hq(async()=>{if(S.status!=='lobby'||S.seats[i].uid===S.hostUid)return;S.seats.splice(i,1);await commit();});}
 function hostSettings(o){hq(async()=>{Object.assign(S,o);if(S.status==='lobby'&&'start' in o)S.seats.forEach(s=>s.chips=S.start);await commit();});}
 function hostStart(){hq(async()=>{if(S.seats.length<2)return;S.status='hand';S.dealer=-1;S.handNo=0;S.seats.forEach(s=>{s.out=false;s.waiting=false;});await startHand();await advance();});}
 
 async function share(){
   const url=inviteURL(),text=`テキサスホールデムやろう！テーブルコード ${code}`;
   if(navigator.share){try{await navigator.share({title:'ALL IN HOLD\'EM',text,url});return;}catch(e){if(e&&e.name==='AbortError')return;}}
-  try{await navigator.clipboard.writeText(text+'\n'+url);lastErr='';const b=$('#shareBtn');if(b)b.textContent='リンクをコピーしました';}
+  try{await navigator.clipboard.writeText(text+'\n'+url);const b=$('#shareBtn');if(b)b.textContent='リンクをコピーしました';}
   catch(e){const u=$('#urlbox');if(u){u.hidden=false;u.select&&u.select();}}
 }
 function renderLobby(){
@@ -741,7 +760,6 @@ function renderTable(){
     const minis=p.out||p.folded||!p.dealt?'':`<div class="minis">${face?face.map(c=>cardHTML(c,'sm '+hk(c))).join(''):backHTML('sm')+backHTML('sm')}</div>`;
     let tag='';
     if(p.waiting)tag='<span class="tag fold">次から参加</span>';
-    else if(p.away&&!p.cpu)tag='<span class="tag fold">通信待ち</span>';
     else if(p.out)tag='<span class="tag fold">OUT</span>';
     else if(S.result&&p.won)tag=`<span class="tag hand">+${fmt(p.won)}</span>`;
     else if(S.showdown&&p.handName)tag=`<span class="tag hand">${p.handName}</span>`;
@@ -859,7 +877,7 @@ function openMenu(){
   ov.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{speed=+b.dataset.sp;ov.querySelectorAll('[data-sp]').forEach(x=>x.setAttribute('aria-pressed',x===b));});
   const arm=(id,f)=>{let armed=false;on(id,e=>{if(!armed){armed=true;e.target.textContent='もう一度押すと実行';return;}ov.remove();f();});};
   arm('#mlobby',hostToLobby);
-  arm('#mclosetbl',()=>hq(async()=>{S.status='closed';await commit();await sleep(600);ls.set('aih_host','');setHash('');showHome('');}));
+  arm('#mclosetbl',()=>hq(async()=>{S.status='closed';await commit();await sleep(800);ls.set('aih_host','');setHash('');showHome('');}));
   arm('#mleave',()=>{sendJoin(true);});
   on('#mhome',()=>{ov.remove();setHash('');showHome('');});
   on('#mclose',()=>ov.remove());
